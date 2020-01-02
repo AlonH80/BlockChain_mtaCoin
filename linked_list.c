@@ -5,13 +5,13 @@
 //---------------------------------------------------------------------------
 //----------------------------- Includes ------------------------------------
 //---------------------------------------------------------------------------
-#include "linked_list.h"
+#include "../include/linked_list.h"
 
 //---------------------------------------------------------------------------
 //---------------------- Private Methods Prototypes -------------------------
 //---------------------------------------------------------------------------
 Singly_Linked_Node 
-*allocate_list_cell(pVoid data_ptr);
+*allocate_list_cell(pVoid i_data_ptr);
 
 //---------------------------------------------------------------------------
 //-----------------------Private Methods Implementations---------------------
@@ -19,7 +19,7 @@ Singly_Linked_Node
 
 PRIVATE 
 Singly_Linked_Node* 
-allocate_list_cell(pVoid data_ptr)
+allocate_list_cell(pVoid i_data_ptr)
 {
 	//S_L_N is a Typedef for Singly_Linked_Node
     S_L_N *cell = malloc(sizeof(S_L_N));
@@ -29,7 +29,7 @@ allocate_list_cell(pVoid data_ptr)
         exit(1);
     }
 
-    cell->data = data_ptr;
+    cell->data = i_data_ptr;
     cell->next = NULL;
 
     return cell;
@@ -40,61 +40,54 @@ allocate_list_cell(pVoid data_ptr)
 //---------------------------------------------------------------------------
 PUBLIC
 Singly_Linked_List* 
-initialize_Empty_List( size_t Element_Size, freeFunction free_Fn)
+initialize_Empty_List(size_t i_element_Size, freeFunction i_free_Fn)
 {
 	Singly_Linked_List*  new_list = malloc(sizeof(Singly_Linked_List));
 	new_list->head = new_list->tail = NULL;
-	new_list->element_size = Element_Size;
+	new_list->element_size = i_element_Size;
 	new_list->length = 0;
-	new_list->freeFn = free_Fn;
+	new_list->freeFn = i_free_Fn;
 	
 	return new_list;
 }
 					  
 PUBLIC
 void 
-append_To_List(Singly_Linked_List *list, pVoid element)
+append_To_List(Singly_Linked_List *o_list, pVoid i_element)
 {
-	Singly_Linked_Node *cell = allocate_list_cell(element);
+	Singly_Linked_Node *cell = allocate_list_cell(i_element);
 
-	if(list->length == 0)
+	if(o_list->length == 0)
     {
-        list->head = list->tail = cell;
+        o_list->head = o_list->tail = cell;
     }
 	else
     {
-        list->tail->next = cell;
-        list->tail = cell;
+        o_list->tail->next = cell;
+        o_list->tail = cell;
     }
 
-  list->length++;
+  o_list->length++;
 }
 
 PUBLIC 
 void
-destroy_List(Singly_Linked_List *list)
+destroy_List(Singly_Linked_List *i_list)
 {
-	Singly_Linked_Node *current = list->head;
+	Singly_Linked_Node *current = i_list->head;
 
 	while (current != NULL) {
-		list->head = current->next;
+		i_list->head = current->next;
 
-		if (list->freeFn) {
-			list->freeFn(current->data);
+		if (i_list->freeFn) {
+			i_list->freeFn(current->data);
 		}
 
 		free(current->data);
 		free(current);
 
-		list->length--;
+		i_list->length--;
 
-		current = list->head;
+		current = i_list->head;
 	}
-}
-
-PUBLIC
-Singly_Linked_Node*
-search_List(Singly_Linked_List *list, pVoid data)
-{
-		return NULL;//TODO - Write Search Function
 }

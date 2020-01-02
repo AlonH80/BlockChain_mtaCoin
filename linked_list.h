@@ -35,15 +35,12 @@ typedef Singly_Linked_List S_L_L;
 //---------------------- Public Methods Prototypes---------------------------
 //---------------------------------------------------------------------------
 Singly_Linked_List* 
-initialize_Empty_List( size_t Element_Size, freeFunction free_Fn);
+initialize_Empty_List(size_t i_element_Size, freeFunction i_free_Fn);
 
 void 
-append_To_List(Singly_Linked_List *list, pVoid element);
+append_To_List(Singly_Linked_List *o_list, pVoid i_element);
 
 void 
-destroy_List(Singly_Linked_List *list);
+destroy_List(Singly_Linked_List *i_list);
 
-Singly_Linked_Node*
-search_List(Singly_Linked_List *list, pVoid data);
-
-#endif // LINKED_LIST_MANAGER_H
+#endif // !LINKED_LIST_MANAGER_H
