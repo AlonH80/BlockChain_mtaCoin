@@ -1,26 +1,40 @@
 
 #include "miner.h"
+#include <stdlib.h>
+#include <stdio.h>
+#include <time.h>
+#include <pthread.h>
+#include "utility.h"
+#include "bitcoin.h"
 
 int miner_id = -1;
 int nonce = 0;
+pthread_mutex_t get_block_lock;
+pthrea_mutex_t set_block_lock;
 
 void programLoop(int i_Miner_id){
+    programInit();
+
     miner_id = i_Miner_id;
     bitcoin_block_data* currBlock;
     bitcoin_block_data* newBlock;
     BOOL blockIsRelevant = TRUE;
 
     while(1){
+        pthread_mutex_lock(&get_block_lock);
         currBlock = getCurrentBlockFromServer();
+        pthread_mutex_unlock(&get_block_lock);
+
         while(verifyBlockIsRelevant(currBlock)){
-            newBlock = createBlock(currBlock->height);
-            manipulateNonce();
-            updateTimestamp(newBlock);
-            verifyBlock(newBlock, DIFFICULTY);
+            newBlock = initialize_new_block(currBlock);
+            updateBlock(newBlock);
+            mineBlock(newBlock);
             sendBlockToServer(newBlock);
-            //waitResponse();
+            usleep(200); // for debugging only
         }
     }
+
+    programDestroy();
 }
 
 bitcoin_block_data* getCurrentBlockFromServer(){
@@ -31,46 +45,43 @@ BOOL verifyBlockIsRelevant(){
     return NULL;
 }
 
-void manipulateNonce(bitcoin_block_data* i_Block){
-    ++nonce;
-}
-
-void updateTimestamp(bitcoin_block_data* i_Block){
-    i_Block->timestamp = getTimeStamp();
-}
-
-bitcoin_block_data* createBlock(int i_Height, int i_prevHash){
-    bitcoin_block_data* block = (bitcoin_block_data*)malloc(sizeof(bitcoin_block_data));
-    block->timestamp = get_current_time_stamp();
-    block->height = i_Height + 1;
-    block->hash = 0;
-    block->prev_hash = i_prevHash;
-    block->difficulty = DIFFICULTY;
-    block->nonce =nonce;
-    block->relayed_by = miner_id;
-    // do {
-    //Uint crcHash = crc32b(create_message());
-    //block->hash = crcHash
-    // } while(!verifyDifficulty(block));
-    return block;
-}
-
 BOOL sendBlockToServer(bitcoin_block_data* i_Block){
-    put_block = i_Block;
+    pthread_mutex_lock(&set_block_lock);
+    //<name of global var> = i_Block;
+    pthread_mutex_unlock(&set_block_lock);
     return TRUE;
 }
-
-//UINT getTimeStamp(){
-//    return (UINT)time(NULL);
-//}
 
 BOOL verifyBlockIsRelevant(bitcoin_block_data* i_Block){
     return i_Block == getCurrentBlockFromServer();
 }
 
-//void waitResponse(){
-//    //sem_wait();
-//}
+void updateBlock(bitcoin_block_data* i_Block){
+    char* hashVal = NULL;
+    i_Block->nonce = ++nonce;
+    i_Block->relayed_by = miner_id;
+    hashVal = concatBlock(i_Block);
+    i_Block->hash = createHash(hashVal);
+    free(hashVal);
+}
+
+BOOL mineBlock(bitcoin_block_data* i_Block){
+    while(checkDifficulty(i_Block, DIFFICULTY)){
+        i_Block->nonce = ++nonce;
+        i_Block->timestamp = get_current_time_stamp();
+        i_Block->hash = createHash(i_Block);
+    }
+}
+
+void programInit(){
+    pthread_mutex_init(&get_block_lock, NULL);
+    pthread_mutex_init(&set_block_lock, NULL);
+}
+
+void programDestroy(){
+    pthread_mutex_destroy(&get_block_lock, NULL);
+    pthread_mutex_destroy(&set_block_lock, NULL);
+}
 
 int main(int argc, char* argv[]){
     if (argc < 2){
