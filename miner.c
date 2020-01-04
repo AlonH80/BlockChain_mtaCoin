@@ -56,7 +56,7 @@ BOOL verifyBlockIsRelevant(bitcoin_block_data* i_Block){
 
 void updateBlock(bitcoin_block_data* i_block, int i_miner_id){
     char* hashVal = NULL;
-    i_Block->nonce = ++nonce;
+    i_Block->nonce = 1;
     i_Block->relayed_by = i_miner_id;
     hashVal = concatBlock(i_block);
     i_Block->hash = createHash(hashVal);
@@ -65,7 +65,7 @@ void updateBlock(bitcoin_block_data* i_block, int i_miner_id){
 
 BOOL mineBlock(bitcoin_block_data* i_Block){
     while(checkDifficulty(i_Block, DIFFICULTY)){
-        i_Block->nonce = ++nonce;
+        i_Block->nonce = ++(i_Block->nonce);
         i_Block->timestamp = get_current_time_stamp();
         i_Block->hash = createHash(i_Block);
     }
