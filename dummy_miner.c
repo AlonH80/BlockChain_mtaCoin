@@ -2,10 +2,8 @@
 #include "dummy_miner.h"
 #include "miner.h"
 
-void programFalseLoop(int i_Miner_id){
-    programInit();
-
-    miner_id = i_Miner_id;
+void programFalseLoop(){
+    miner_id = NUM_OF_MINERS + 1;
     bitcoin_block_data* currBlock;
     bitcoin_block_data* newBlock;
     BOOL blockIsRelevant = TRUE;
@@ -23,21 +21,8 @@ void programFalseLoop(int i_Miner_id){
             usleep(1000);
         }
     }
-
-    programDestroy();
 }
 
 void falselyMineBlock(bitcoin_block_data* i_Block){
     i_Block->hash = createHash(i_Block) + FALSE_FACTOR;
-}
-
-int main(int argc, char* argv[]){
-    if (argc < 2){
-        perror("Invalid arguments must enter miner ID in argv[1]\n");
-        exit(1);
-    }
-    else{
-        programFalseLoop(atoi(argv[1]));
-    }
-    return 0;
 }

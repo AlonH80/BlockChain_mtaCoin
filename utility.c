@@ -1,15 +1,16 @@
 ﻿/* ======================================================== */
 /*   utility.c				       						    */
 /* ======================================================== */
-#include <zlib.h>
-#include <string.h>
-
-Uint GENESIS_VAL = 0;
 
 //---------------------------------------------------------------------------
 //----------------------------- Includes ------------------------------------
 //---------------------------------------------------------------------------
-
+#include <zlib.h>
+#include <string.h>
+#include "../include/utility.h"
+#include "../include/definitions.h"
+#include "../include/bitcoin.h"
+#include "bitcoin.c"
 
 //---------------------------------------------------------------------------
 //------------------------- Private Methods Prototypes ----------------------
@@ -40,14 +41,16 @@ initialize_new_block(bitcoin_block_data* i_head block)
 	new_block->height = i_head block->height + 1;
 	new_block->time_stamp = get_current_time_stamp();
 	new_block->prev_hash = i_head block->hash;
-	new_block->nonce = 0; // MINER responsibility
-	new_block->relayed_by = NULL; // MINER responsibility
-    new_block->hash = 0; // MINER responsibility
+	new_block->nonce = PLACE_HOLDER_TILL_MINER_WILL_MINE;		// MINER responsibility
+	new_block->relayed_by = PLACE_HOLDER_TILL_MINER_WILL_MINE;  // MINER responsibility
+    new_block->hash = PLACE_HOLDER_TILL_MINER_WILL_MINE;		// MINER responsibility
     return new_block;
-
 }
 
-bitcoin_block_data* createGenesis(){
+PUBLIC
+bitcoin_block_data* 
+createGenesis()
+{
 		bitcoin_block_data* new_block = malloc(sizeof(bitcoin_block_data));
 		new_block->height = GENESIS_VAL;
 		new_block->time_stamp = get_current_time_stamp();
@@ -55,41 +58,53 @@ bitcoin_block_data* createGenesis(){
 		new_block->difficulty = DIFFICULTY;
 		new_block->nonce = GENESIS_VAL;
 		new_block->relayed_by = GENESIS_VAL;
-		new_block->hash = GENESIS_VAL; // createHash(get_current_time_stamp()) - was here before, what's better?
+		new_block->hash = createHash(concatBlock(&new_block));
 		return new_block;
 }
 
-Uint createHash(unsigned char* data){
+PUBLIC
+Uint 
+createHash(unsigned char* data)
+{
 	return(crc32(0L, data, strlen(data)));
 }
 
-int checkDifficulty(Uint i_Hash, int i_Difficulty){
-    int i;
-    Uint difficultyMask = 0;
-    for (i = 0; i < i_Difficulty; ++i){
-        // i = 0 -> 1 << 31
-        // i = 1 -> 1 << 30
-        // etc.
-        difficultyMask |= 1 << (sizeof(Uint) - i - 1);
-    }
+PUBLIC
+int 
+check_difficulty(Uint i_hash, int i_difficulty)
+{
+    Uint difficulty_max_hash_val = 1;
+    
+	difficulty_max_hash_val << = (sizeof(i_hash) * 8 - i_difficulty);
+	difficulty_max_hash_val--;
 
-	return (difficultyMask & i_Hash) == 0;
+	return i_hash <= difficulty_max_hash_val ? TRUE : FALSE;
 }
 
-void appendToString(char* i_OrigString, const char* i_PartToAppend){
+PRIVATE
+void 
+appendToString(char* i_OrigString, const char* i_PartToAppend)
+{
     int partLen = strlen(i_PartToAppend);
     int origStringLen = strlen(i_OrigString);
-    for (int i = 0; i < partLen; ++i){
+    for (int i = 0; i < partLen; ++i)
+	{
         i_OrigString[origStringLen + i] = partToAppend[i];
     }
 }
 
-void appendIntToString(char* i_OrigString, Uint i_Num){
+PRIVATE
+void 
+appendIntToString(char* i_OrigString, Uint i_Num)
+{
     const char* intString = itoa(i_Num);
     appendToString(i_OrigString, intString);
 }
 
-char* concatBlock(bitcoin_block_data* i_Block){
+PUBLIC
+char* 
+concatBlock(bitcoin_block_data* i_Block)
+{
     Uint STRING_SIZE = 100;
     char* concatedData = (char*)malloc(STRING_SIZE);
     appendIntToString(concatedData, i_Block->height);
@@ -100,5 +115,16 @@ char* concatBlock(bitcoin_block_data* i_Block){
     appendIntToString(concatedData, i_Block->relayed_by);
 
     return concatedData;
+}
 
+PUBLIC
+EBoolType
+verify_block(bitcoin_block_data* i_Block)
+{
+    calculatedHash = createHash(concatBlock(&i_block));
+EBoolType answer = i_Block->height != g_curr_srv_head ?
+		FALSE : g_curr_srv_head->hash != calculatedHash?
+		FALSE : TRUE;
+
+	return answer;
 }

@@ -18,8 +18,6 @@
 #define PUBLIC
 #define NONE 0
 #define MAX_LEN  255
-#define BITCOIN_DB_FILENAME  "bitcoin_db.txt"
-#define BITCOIN_DB_LOADER 	 "Requester.sh"
 
 //---------------------------------------------------------------------------
 //----------------------------- General Typedefs ----------------------------
@@ -27,7 +25,7 @@
 typedef enum { FALSE=0, TRUE=1 } EBoolType;
 typedef enum { SUCCESS = 0, FAILURE = 1, PARSED = 2 } EExecutionStatus;
 typedef void* pVoid;
-
+typedef unsigned int Uint;
 //---------------------------------------------------------------------------
 //----------------------------- Debugging -----------------------------------
 //---------------------------------------------------------------------------

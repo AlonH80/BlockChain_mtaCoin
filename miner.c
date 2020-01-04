@@ -7,13 +7,14 @@
 #include "utility.h"
 #include "bitcoin.h"
 
-pthread_mutex_t get_block_lock;
-pthrea_mutex_t set_block_lock;
+int thread_id = 0;
 
-void programLoop(int i_miner_id){
-    programInit();
+void programLoop(){
+    pthread_mutex_lock(&set_id);
+    int miner_id = ++thread_id;
+    pthread_mutex_unlock(&set_id);
+    pthread_cond_wait(&wait_start_mine);
 
-    int miner_id = i_miner_id;
     bitcoin_block_data* currBlock;
     bitcoin_block_data* newBlock;
     BOOL blockIsRelevant = TRUE;
@@ -29,8 +30,6 @@ void programLoop(int i_miner_id){
             usleep(200); // for debugging only
         }
     }
-
-    programDestroy();
 }
 
 bitcoin_block_data* getCurrentBlockFromServer(){
@@ -42,8 +41,9 @@ bitcoin_block_data* getCurrentBlockFromServer(){
 
 BOOL sendBlockToServer(bitcoin_block_data* i_Block){
     pthread_mutex_lock(&set_block_lock);
-    //<name of global var> = i_Block;
+    g_proposed_srv_head = i_Block;
     pthread_mutex_unlock(&set_block_lock);
+    pthread_cond_broadcast(&new_block_arrive);
     return TRUE;
 }
 
@@ -69,25 +69,4 @@ BOOL mineBlock(bitcoin_block_data* i_Block){
         i_Block->timestamp = get_current_time_stamp();
         i_Block->hash = createHash(i_Block);
     }
-}
-
-void programInit(){
-    pthread_mutex_init(&get_block_lock, NULL);
-    pthread_mutex_init(&set_block_lock, NULL);
-}
-
-void programDestroy(){
-    pthread_mutex_destroy(&get_block_lock, NULL);
-    pthread_mutex_destroy(&set_block_lock, NULL);
-}
-
-int main(int argc, char* argv[]){
-    if (argc < 2){
-        perror("Invalid arguments must enter miner ID in argv[1]\n");
-        exit(1);
-    }
-    else{
-        programLoop(atoi(argv[1]));
-    }
-    return 0;
 }

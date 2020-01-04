@@ -7,19 +7,18 @@
 //---------------------------------------------------------------------------
 //----------------------------- Includes ------------------------------------
 //---------------------------------------------------------------------------
-
-#include "../include/file_handler.h"
+#include "definitions.h"
 #include "linked_list.h"
 
 //---------------------------------------------------------------------------
 //------------------------ Bitcoin Type Defines -----------------------------
 //---------------------------------------------------------------------------
-typedef unsigned int Uint
+
 
 //---------------------------------------------------------------------------
 //--------------------------- Bitcoin Defines -------------------------------
 //---------------------------------------------------------------------------
-#define DIFFICULTY 16 //TODO - leave it here? or in utility is enough?
+#define DIFFICULTY 16
 
 //---------------------------------------------------------------------------
 //---------------------- Bitcoin Block Data Structure -----------------------
@@ -35,6 +34,15 @@ typedef struct _bitcoin_block_data
 	Uint relayed_by;
 	
 } bitcoin_block_data;
+
+pthread_mutex_t get_block_lock;
+pthread_mutex_t set_block_lock;
+pthread_mutex_t set_id;
+pthread_cond_t wait_start_mine;
+pthread_cond_t new_block_arrive;
+
+bitcoin_block_data* g_curr_srv_head;
+bitcoin_block_data* g_proposed_srv_head;
 
 //---------------------------------------------------------------------------
 //---------------------- Public Method Prototypes ---------------------------

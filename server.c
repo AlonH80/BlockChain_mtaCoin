@@ -1,59 +1,115 @@
+#include <sys/time.h>
+#include <sys/resource.h>
+#include "../include/linked_list.h"
+#include "../include/bitcoin.h"
+#include "bitcoin.c"
+#include "utility.h"
+#include "miner.h"
+#include "dummy_miner.h"
 
-#include "server.h"
+bitcoin_block_data* currCandidate;
 
-void programLoop(){
-    BLOCK_T* newBlock = NULL;
-    BOOL appendNewBlock;
+void
+print_block_acceptance();
 
-    initialize_srv();
-    while(1){
-        newBlock = waitForNewBlock();
-        appendNewBlock = verifyBlock(newBlock);
-        if (appendNewBlock){
-            notifyMiners();
-            appendNewBlock(newBlock);
+void
+print_block_rejection(Uint);
+
+PUBLIC
+void 
+server()
+{
+	Singly_Linked_List blockchain;
+	initialize_list_with_genesys(&blockchain);
+    programInit();
+	bitcoin_block_data checked_block = g_proposed_srv_head;
+	pthread_cond_broadcast(&wait_start_mine);
+
+	while(blockchain.length < 100){
+	    pthread_mutex_lock(&set_block_lock);
+	    pthread_cond_wait(&new_block_arrive, &set_block_lock);
+        currCandidate = g_proposed_srv_head;
+        pthread_mutex_unlock(&set_block_lock);
+
+	    if (verify_block(currCandidate))
+        {
+            append_To_List(&blockchain, currCandidate);
+            print_block_acceptance();
         }
-        else{
-            perror("Invalid block\n");
+        else
+        {
+            print_block_rejection();
+            free(currCandidate);
         }
-    }
+
+	}
+
+    destroy_List(&blockchain);
+	destroy_srv();
 }
 
-void initialize_srv(){
-    createMiners(NUM_OF_MINERS);
-    generateGenesisBlock();
-    srand(time(NULL));
+PRIVATE
+void
+initialize_list_with_genesys(Singly_Linked_List* blockchain)
+{
+	initialize_Empty_List(blockchain,
+						  sizeof(bitcoin_block_data),
+						  release_bitcoin_block_data);
+
+	bitcoin_block_data genesys_block = createGenesis();
+	
+	append_To_List(&blockchain, genesis_block);
+	g_curr_srv_head = genesys_block;
+	free(genesys_block);
 }
 
-void createMiners(){
+PRIVATE
+void
+print_block_acceptance()
+{
+	printf("Server: New block added by %d, attributes: ", 
+			currCandidate->relayed_by);
+	print_bitcoin_block_data(currCandidate);
+	printf("\n");
+}
+
+PRIVATE
+void
+print_block_rejection()
+{
+	printf("Wrong hash for block #%d by miner %d, received %d but calculated %d",
+		    currCandidate->height,
+            currCandidate->relayed_by,
+            currCandidate->hash,
+            calculatedHash);
+}
+
+PRIVATE
+int*
+initialize_srv(){
+    setpriority(PRIO_PROCESS, 0, -20);
+    programInit();
     int i;
-    miners = (miner*)malloc(sizeof(miner) * NUM_OF_MINERS);
-    for (i = 0; i < NUM_OF_MINERS; ++i){
-        pthread_create(miners[i].minerThread, NULL, /*func*/ NULL, itoa(i));
-        miners[i].newBlockFlag = FALSE;
+    pthread_t thread_ids[NUM_OF_MINERS + 1];
+    for(i = 0; i < NUM_OF_MINERS; ++i){
+            pthread_create(&thread_ids[i], NULL, programLoop, NULL);
     }
+
+    pthread_create(&thread_ids[NUM_OF_MINERS], NULL, programFalseLoop, NULL);
 }
 
-void create_genesis_block{
-    blockList = initialize_Empty_List(sizeof(Singly_Linked_Node), release_bitcoin_block_data);
-    BLOCK_T* genesisData = initialize_bitcoin_block_data();
-    appendNewBlock(genesisData);
-}
-
-void notifyMiners(){
+PRIVATE
+void
+destroy_srv(pthread_t threads_ids[]){
+    int i;
     for (i = 0; i < NUM_OF_MINERS; ++i){
-        miners[i].newBlockFlag = TRUE;
+        pthread_cancel(threads_ids[i]);
     }
-}
-
-void appendNewBlock(BLOCK_T* newBlock){
-    appendToList(blockList, newBlock);
-}
-
-BLOCK_T* waitForNewBlock(){
+    pthread_cancel(threads_ids[NUM_OF_MINERS]); // dummy thread
+    programDestroy();
 
 }
 
-BOOL verifyBlock(BLOCK_T*){
-
+int main(){
+    server();
 }
