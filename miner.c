@@ -7,27 +7,23 @@
 #include "utility.h"
 #include "bitcoin.h"
 
-int miner_id = -1;
-int nonce = 0;
 pthread_mutex_t get_block_lock;
 pthrea_mutex_t set_block_lock;
 
-void programLoop(int i_Miner_id){
+void programLoop(int i_miner_id){
     programInit();
 
-    miner_id = i_Miner_id;
+    int miner_id = i_miner_id;
     bitcoin_block_data* currBlock;
     bitcoin_block_data* newBlock;
     BOOL blockIsRelevant = TRUE;
 
     while(1){
-        pthread_mutex_lock(&get_block_lock);
         currBlock = getCurrentBlockFromServer();
-        pthread_mutex_unlock(&get_block_lock);
 
         while(verifyBlockIsRelevant(currBlock)){
             newBlock = initialize_new_block(currBlock);
-            updateBlock(newBlock);
+            updateBlock(newBlock, miner_id);
             mineBlock(newBlock);
             sendBlockToServer(newBlock);
             usleep(200); // for debugging only
@@ -38,11 +34,10 @@ void programLoop(int i_Miner_id){
 }
 
 bitcoin_block_data* getCurrentBlockFromServer(){
-    return curr_srv_head;
-}
-
-BOOL verifyBlockIsRelevant(){
-    return NULL;
+    pthread_mutex_lock(&get_block_lock);
+    bitcoin_block_data* currBlock = curr_srv_head;
+    pthread_mutex_unlock(&get_block_lock);
+    return currBlock;
 }
 
 BOOL sendBlockToServer(bitcoin_block_data* i_Block){
@@ -53,14 +48,17 @@ BOOL sendBlockToServer(bitcoin_block_data* i_Block){
 }
 
 BOOL verifyBlockIsRelevant(bitcoin_block_data* i_Block){
-    return i_Block == getCurrentBlockFromServer();
+    pthread_mutex_lock(&get_block_lock);
+    BOOL isRelevant = i_Block == getCurrentBlockFromServer();
+    pthread_mutex_unlock(&get_block_lock);
+    return isRelevant;
 }
 
-void updateBlock(bitcoin_block_data* i_Block){
+void updateBlock(bitcoin_block_data* i_block, int i_miner_id){
     char* hashVal = NULL;
     i_Block->nonce = ++nonce;
-    i_Block->relayed_by = miner_id;
-    hashVal = concatBlock(i_Block);
+    i_Block->relayed_by = i_miner_id;
+    hashVal = concatBlock(i_block);
     i_Block->hash = createHash(hashVal);
     free(hashVal);
 }

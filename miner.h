@@ -17,7 +17,7 @@ bitcoin_block_data* createBlock(int, int);
 BOOL mineBlock(bitcoin_block_data*);
 BOOL sendBlockToServer(bitcoin_block_data*);
 void waitResponse();
-void updateBlock(bitcoin_block_data* i_Block);
+void updateBlock(bitcoin_block_data* i_Block, int i_miner_id);
 void programInit();
 void programDestroy();
 
