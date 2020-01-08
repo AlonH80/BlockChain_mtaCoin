@@ -1,9 +1,8 @@
 
-#include "dummy_miner.h"
-#include "miner.h"
+#include "../include/dummy_miner.h"
 
 void programFalseLoop(){
-    miner_id = NUM_OF_MINERS + 1;
+    int miner_id = NUM_OF_MINERS + 1;
     bitcoin_block_data* currBlock;
     bitcoin_block_data* newBlock;
     BOOL blockIsRelevant = TRUE;
@@ -15,7 +14,7 @@ void programFalseLoop(){
 
         while(verifyBlockIsRelevant(currBlock)){
             newBlock = initialize_new_block(currBlock);
-            updateBlock(newBlock);
+            updateBlock(newBlock, miner_id);
             falselyMineBlock(newBlock);
             sendBlockToServer(newBlock);
             usleep(1000);

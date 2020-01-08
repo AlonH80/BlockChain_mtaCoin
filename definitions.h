@@ -22,8 +22,8 @@
 //---------------------------------------------------------------------------
 //----------------------------- General Typedefs ----------------------------
 //---------------------------------------------------------------------------
-typedef enum { FALSE=0, TRUE=1 } EBoolType;
-typedef enum { SUCCESS = 0, FAILURE = 1, PARSED = 2 } EExecutionStatus;
+typedef enum boolType { FALSE=0, TRUE=1 } EBoolType;
+typedef enum executionStatus { SUCCESS = 0, FAILURE = 1, PARSED = 2 } EExecutionStatus;
 typedef void* pVoid;
 typedef unsigned int Uint;
 //---------------------------------------------------------------------------

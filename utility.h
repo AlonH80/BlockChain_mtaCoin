@@ -7,7 +7,11 @@
 //---------------------------------------------------------------------------
 //----------------------------- Includes ------------------------------------
 //---------------------------------------------------------------------------
-
+#include <stdlib.h>
+#include <string.h>
+#include "bitcoin.h"
+#include "linked_list.h"
+#include "definitions.h"
 
 //---------------------------------------------------------------------------
 //--------------------------- Bitcoin Defines -------------------------------
@@ -22,7 +26,7 @@ Uint calculatedHash;
 //---------------------------------------------------------------------------
 //---------------------- Public Methods Prototypes---------------------------
 //---------------------------------------------------------------------------
-bitcoin_block_data* initialize_new_block(bitcoin_block_data* i_head block);
+bitcoin_block_data* initialize_new_block(bitcoin_block_data* i_head_block);
 bitcoin_block_data* createGenesis();
 Uint createHash(unsigned char* data);
 int check_difficulty(Uint i_Hash, int i_Difficulty);

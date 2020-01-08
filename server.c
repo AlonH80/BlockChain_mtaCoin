@@ -1,11 +1,12 @@
 #include <sys/time.h>
 #include <sys/resource.h>
+#include <pthread.h>
 #include "../include/linked_list.h"
 #include "../include/bitcoin.h"
-#include "bitcoin.c"
-#include "utility.h"
-#include "miner.h"
-#include "dummy_miner.h"
+//#include "bitcoin.c"
+#include "../include/utility.h"
+#include "../include/miner.h"
+#include "../include/dummy_miner.h"
 
 bitcoin_block_data* currCandidate;
 
@@ -13,16 +14,25 @@ void
 print_block_acceptance();
 
 void
-print_block_rejection(Uint);
+print_block_rejection();
+
+void
+initialize_list_with_genesis(Singly_Linked_List* blockchain);
+
+void
+destroy_srv(pthread_t threads_ids[]);
+
+int*
+initialize_srv();
 
 PUBLIC
 void 
 server()
 {
 	Singly_Linked_List blockchain;
-	initialize_list_with_genesys(&blockchain);
-    programInit();
-	bitcoin_block_data checked_block = g_proposed_srv_head;
+	initialize_list_with_genesis(&blockchain);
+    pthread_t* threadsIds = initialize_srv();
+	bitcoin_block_data* checked_block = g_proposed_srv_head;
 	pthread_cond_broadcast(&wait_start_mine);
 
 	while(blockchain.length < 100){
@@ -45,22 +55,22 @@ server()
 	}
 
     destroy_List(&blockchain);
-	destroy_srv();
+	destroy_srv(threadsIds);
 }
 
 PRIVATE
 void
-initialize_list_with_genesys(Singly_Linked_List* blockchain)
+initialize_list_with_genesis(Singly_Linked_List* blockchain)
 {
-	initialize_Empty_List(blockchain,
+	blockchain = initialize_Empty_List(
 						  sizeof(bitcoin_block_data),
 						  release_bitcoin_block_data);
 
-	bitcoin_block_data genesys_block = createGenesis();
+	bitcoin_block_data* genesis_block = createGenesis();
 	
 	append_To_List(&blockchain, genesis_block);
-	g_curr_srv_head = genesys_block;
-	free(genesys_block);
+	g_curr_srv_head = genesis_block;
+	//free(genesis_block);
 }
 
 PRIVATE
@@ -96,6 +106,7 @@ initialize_srv(){
     }
 
     pthread_create(&thread_ids[NUM_OF_MINERS], NULL, programFalseLoop, NULL);
+    return thread_ids;
 }
 
 PRIVATE

@@ -23,11 +23,11 @@ void programInit()
 
 void programDestroy()
 {
-	pthread_mutex_destroy(&get_block_lock, NULL);
-	pthread_mutex_destroy(&set_block_lock, NULL);
-	pthread_mutex_destroy(&wait_start_mine, NULL);
-    pthread_cond_destroy(&wait_start_mine, NULL);
-    pthread_cond_destroy(&new_block_arrive, NULL);
+	pthread_mutex_destroy(&get_block_lock);
+	pthread_mutex_destroy(&set_block_lock);
+	pthread_mutex_destroy(&wait_start_mine);
+    pthread_cond_destroy(&wait_start_mine);
+    pthread_cond_destroy(&new_block_arrive);
 }
 //---------------------------------------------------------------------------
 //---------------------- Public Methods Implementations----------------------

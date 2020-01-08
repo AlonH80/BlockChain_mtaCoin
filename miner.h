@@ -1,11 +1,11 @@
 
 #ifndef MTACOIN_MINER_H
 #define MTACOIN_MINER_H
-
+#include "bitcoin.h"
+#include "miner.h"
+#include "utility.h"
 typedef char BOOL;
 typedef unsigned int UINT;
-#define TRUE 1
-#define FALSE 0
 
 void programLoop();
 
