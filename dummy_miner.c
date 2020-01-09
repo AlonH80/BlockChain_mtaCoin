@@ -8,16 +8,14 @@ void* programFalseLoop(){
     //BOOL blockIsRelevant = TRUE;
 
     while(1){
-        pthread_mutex_lock(&get_block_lock);
         currBlock = getCurrentBlockFromServer();
-        pthread_mutex_unlock(&get_block_lock);
 
         while(verifyBlockIsRelevant(currBlock)){
             newBlock = initialize_new_block(currBlock);
             updateBlock(newBlock, miner_id);
             falselyMineBlock(newBlock);
             sendBlockToServer(newBlock);
-            usleep(1000);
+            sleep(2);
         }
     }
     return NULL;

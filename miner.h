@@ -5,7 +5,6 @@
 #include <unistd.h>
 #include <stdlib.h>
 #include <stdio.h>
-#include <time.h>
 #include <pthread.h>
 #include "bitcoin.h"
 #include "utility.h"
@@ -23,7 +22,5 @@ void mineBlock(bitcoin_block_data*);
 BOOL sendBlockToServer(bitcoin_block_data*);
 void waitResponse();
 void updateBlock(bitcoin_block_data* i_Block, int i_miner_id);
-void programInit();
-void programDestroy();
 
 #endif

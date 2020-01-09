@@ -17,6 +17,9 @@ Singly_Linked_Node
 //-----------------------Private Methods Implementations---------------------
 //---------------------------------------------------------------------------
 
+#define DEBUG 1
+#define DEB if (DEBUG) {printf("func %s, line %d\n", __func__, __LINE__);}
+
 PRIVATE 
 Singly_Linked_Node* 
 allocate_list_cell(pVoid i_data_ptr)
@@ -75,15 +78,15 @@ void
 destroy_List(Singly_Linked_List *i_list)
 {
 	Singly_Linked_Node *current = i_list->head;
-
 	while (current != NULL) {
 		i_list->head = current->next;
-
 		if (i_list->freeFn) {
 			i_list->freeFn(current->data);
 		}
+		else{
+            free(current->data);
+		}
 
-		free(current->data);
 		free(current);
 
 		i_list->length--;

@@ -28,49 +28,46 @@ PUBLIC
 void 
 server()
 {
-	Singly_Linked_List blockchain;
-	initialize_list_with_genesis(&blockchain);
+	Singly_Linked_List* blockchain = initialize_Empty_List(
+	        sizeof(bitcoin_block_data),
+            release_bitcoin_block_data);
+    initialize_list_with_genesis(blockchain);
     pthread_t* threadsIds = initialize_srv();
 	//bitcoin_block_data* checked_block = g_proposed_srv_head;
-	pthread_cond_broadcast(&wait_start_mine);
-    logBit("Start running server");
-	while(blockchain.length < 100){
+	//pthread_cond_broadcast(&wait_start_mine);
+	while(blockchain->length < 10){
 	    pthread_mutex_lock(&set_block_lock);
 	    pthread_cond_wait(&new_block_arrive, &set_block_lock);
-        currCandidate = g_proposed_srv_head;  // need to copy block
+        currCandidate = g_proposed_srv_head;
         pthread_mutex_unlock(&set_block_lock);
-        logBit("verify block");
 	    if (verify_block(currCandidate))
         {
-            logBit("adding block");
-            append_To_List(&blockchain, currCandidate);
+            append_To_List(blockchain, currCandidate);
             print_block_acceptance();
+            pthread_mutex_lock(&get_block_lock);
+            g_curr_srv_head = currCandidate;
+            pthread_mutex_unlock(&get_block_lock);
         }
         else
         {
-            logBit("reject block");
             print_block_rejection();
             free(currCandidate);
         }
+
 	}
 
-    destroy_List(&blockchain);
-	destroy_srv(threadsIds);
+    destroy_List(blockchain);
+	//destroy_srv(threadsIds);
 }
 
 PRIVATE
 void
 initialize_list_with_genesis(Singly_Linked_List* blockchain)
 {
-	blockchain = initialize_Empty_List(
-						  sizeof(bitcoin_block_data),
-						  release_bitcoin_block_data);
-
 	bitcoin_block_data* genesis_block = createGenesis();
 	
 	append_To_List(blockchain, genesis_block);
 	g_curr_srv_head = genesis_block;
-	//free(genesis_block);
 }
 
 PRIVATE
@@ -79,6 +76,7 @@ print_block_acceptance()
 {
 	printf("Server: New block added by %d, attributes: ", 
 			currCandidate->relayed_by);
+	printf("currCalculatedHash = %d\n", calculatedHash);
 	print_bitcoin_block_data(currCandidate);
 	printf("\n");
 }
@@ -87,11 +85,21 @@ PRIVATE
 void
 print_block_rejection()
 {
-	printf("Wrong hash for block #%d by miner %d, received %d but calculated %d",
-		    currCandidate->height,
-            currCandidate->relayed_by,
-            currCandidate->hash,
-            calculatedHash);
+    if (calculatedHash != currCandidate->hash){
+        printf("Wrong hash for block #%d by miner %d, received %d but calculated %d\n",
+               currCandidate->height,
+               currCandidate->relayed_by,
+               currCandidate->hash,
+               calculatedHash);
+    }
+    else{
+        printf("Wrong height for block #%d by miner %d, received %d but height is %d\n",
+               currCandidate->height,
+               currCandidate->relayed_by,
+               currCandidate->height,
+               headBlockHeight);
+    }
+
 }
 
 PRIVATE
@@ -112,12 +120,11 @@ initialize_srv(){
 PRIVATE
 void
 destroy_srv(pthread_t threads_ids[]){
-    int i;
-    for (i = 0; i < NUM_OF_MINERS; ++i){
-        pthread_cancel(threads_ids[i]);
-    }
-    pthread_cancel(threads_ids[NUM_OF_MINERS]); // dummy thread
-    fclose(logFile);
+//    int i;
+//    for (i = 0; i < NUM_OF_MINERS; ++i){
+//        pthread_cancel(threads_ids[i]);
+//    }
+//    pthread_cancel(threads_ids[NUM_OF_MINERS]); // dummy thread
     programDestroy();
 
 }

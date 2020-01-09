@@ -54,4 +54,7 @@ print_bitcoin_block_data(bitcoin_block_data* block_to_print);
 void 
 release_bitcoin_block_data(pVoid block_to_release);
 
+void programInit();
+void programDestroy();
+
 #endif // !BITCOIN_H

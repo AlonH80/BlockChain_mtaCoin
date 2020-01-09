@@ -49,18 +49,12 @@ print_bitcoin_block_data(bitcoin_block_data* block_to_print)
 	printf("prev_hash(%u), ", block_to_print->prev_hash);
 	printf("difficulty(%u), ", block_to_print->difficulty);
 	printf("nonce(%u)", block_to_print->nonce);
+	printf("\n");
 }
 
 PUBLIC
 void 
 release_bitcoin_block_data(pVoid block_to_release)
 {
-//	free(((bitcoin_block_data*)block_to_release)->hash);
-//	free(((bitcoin_block_data*)block_to_release)->height);
-//	free(((bitcoin_block_data*)block_to_release)->nonce);
-//	free(((bitcoin_block_data*)block_to_release)->time_stamp);
-//	free(((bitcoin_block_data*)block_to_release)->difficulty);
-//	free(((bitcoin_block_data*)block_to_release)->relayed_by);
-//	free(((bitcoin_block_data*)block_to_release)->prev_hash);
     free(block_to_release);
 }

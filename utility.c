@@ -35,6 +35,7 @@ initialize_new_block(bitcoin_block_data* i_head_block)
 	new_block->height = i_head_block->height + 1;
 	new_block->time_stamp = get_current_time_stamp();
 	new_block->prev_hash = i_head_block->hash;
+	new_block->difficulty = DIFFICULTY;
 	new_block->nonce = PLACE_HOLDER_TILL_MINER_WILL_MINE;		// MINER responsibility
 	new_block->relayed_by = PLACE_HOLDER_TILL_MINER_WILL_MINE;  // MINER responsibility
     new_block->hash = PLACE_HOLDER_TILL_MINER_WILL_MINE;		// MINER responsibility
@@ -58,9 +59,9 @@ createGenesis()
 
 PUBLIC
 Uint 
-createHash(unsigned char* data)
+createHash(char* data)
 {
-	return(crc32(0L, data, strlen((const char*)data)));
+	return(crc32(0L, (unsigned char*)data, strlen((const char*)data)));
 }
 
 PUBLIC
@@ -69,7 +70,7 @@ check_difficulty(Uint i_hash, int i_difficulty)
 {
     Uint difficulty_max_hash_val = 1;
     
-	difficulty_max_hash_val = difficulty_max_hash_val << (sizeof(i_hash) * 8 - i_difficulty);
+	difficulty_max_hash_val = difficulty_max_hash_val << (sizeof(Uint) * 8 - i_difficulty);
 	difficulty_max_hash_val--;
 
 	return i_hash <= difficulty_max_hash_val ? TRUE : FALSE;
@@ -77,7 +78,7 @@ check_difficulty(Uint i_hash, int i_difficulty)
 
 PRIVATE
 void 
-appendToString(unsigned char* i_OrigString, unsigned char* i_PartToAppend)
+appendToString(char* i_OrigString, char* i_PartToAppend)
 {
     int partLen = strlen((const char*)i_PartToAppend);
     int origStringLen = strlen((const char*)i_OrigString);
@@ -89,21 +90,20 @@ appendToString(unsigned char* i_OrigString, unsigned char* i_PartToAppend)
 
 PRIVATE
 void 
-appendIntToString(unsigned char* i_OrigString, Uint i_Num)
+appendIntToString(char* i_OrigString, Uint i_Num)
 {
-    unsigned char* intString = (unsigned char*)malloc(10);
-    //itoa(i_Num, intString, 10);
+    char* intString = malloc(10 * sizeof(char));
     sprintf((char*)intString, "%u", i_Num);
     appendToString(i_OrigString, intString);
-    free(intString);
+    //free(intString);
 }
 
 PUBLIC
-unsigned char*
+char*
 concatBlock(bitcoin_block_data* i_Block)
 {
     Uint STRING_SIZE = 100;
-    unsigned char* concatedData = (unsigned char*)malloc(STRING_SIZE);
+    char* concatedData = malloc(STRING_SIZE * sizeof(char));
     appendIntToString(concatedData, i_Block->height);
     appendIntToString(concatedData, i_Block->time_stamp);
     appendIntToString(concatedData, i_Block->prev_hash);
@@ -117,9 +117,9 @@ concatBlock(bitcoin_block_data* i_Block)
 PUBLIC
 Uint
 createHashFromBlock(bitcoin_block_data* i_Block){
-    unsigned char* concatedBlock = concatBlock(i_Block);
+    char* concatedBlock = concatBlock(i_Block);
     Uint hashValue  = createHash(concatedBlock);
-    free(concatedBlock);
+    //free(concatedBlock);
     return hashValue;
 }
 
@@ -127,9 +127,12 @@ PUBLIC
 EBoolType
 verify_block(bitcoin_block_data* i_Block)
 {
+    pthread_mutex_lock(&get_block_lock);
+    headBlockHeight = g_curr_srv_head->height;
+    pthread_mutex_unlock(&get_block_lock);
     calculatedHash = createHashFromBlock(i_Block);
-EBoolType answer = i_Block->height != g_curr_srv_head->height + 1 ?
-		FALSE : g_curr_srv_head->hash != calculatedHash?
+EBoolType answer = i_Block->height != headBlockHeight + 1 ?
+		FALSE : i_Block->hash != calculatedHash?
 		FALSE : TRUE;
 
 	return answer;
