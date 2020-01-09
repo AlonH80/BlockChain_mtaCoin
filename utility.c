@@ -5,25 +5,19 @@
 //---------------------------------------------------------------------------
 //----------------------------- Includes ------------------------------------
 //---------------------------------------------------------------------------
-#include <zlib.h>
-#include <string.h>
-#include "../include/utility.h"
-#include "../include/definitions.h"
-#include "../include/bitcoin.h"
-//#include "bitcoin.c"
 
+#include "../include/utility.h"
 //---------------------------------------------------------------------------
 //------------------------- Private Methods Prototypes ----------------------
 //---------------------------------------------------------------------------
-Uint
-get_current_time_stamp(void);
+
 
 //---------------------------------------------------------------------------
 //----------------------- Private Methods Implementations -------------------
 //---------------------------------------------------------------------------
 PRIVATE
 Uint
-get_current_time_stamp(void)
+get_current_time_stamp()
 {
 	return (Uint)time(NULL);
 }
@@ -58,7 +52,7 @@ createGenesis()
 		new_block->difficulty = DIFFICULTY;
 		new_block->nonce = GENESIS_VAL;
 		new_block->relayed_by = GENESIS_VAL;
-		new_block->hash = createHash(concatBlock(&new_block));
+		new_block->hash = createHashFromBlock(new_block);
 		return new_block;
 }
 
@@ -66,7 +60,7 @@ PUBLIC
 Uint 
 createHash(unsigned char* data)
 {
-	return(crc32(0L, data, strlen(data)));
+	return(crc32(0L, data, strlen((const char*)data)));
 }
 
 PUBLIC
@@ -83,10 +77,10 @@ check_difficulty(Uint i_hash, int i_difficulty)
 
 PRIVATE
 void 
-appendToString(char* i_OrigString, const char* i_PartToAppend)
+appendToString(unsigned char* i_OrigString, unsigned char* i_PartToAppend)
 {
-    int partLen = strlen(i_PartToAppend);
-    int origStringLen = strlen(i_OrigString);
+    int partLen = strlen((const char*)i_PartToAppend);
+    int origStringLen = strlen((const char*)i_OrigString);
     for (int i = 0; i < partLen; ++i)
 	{
         i_OrigString[origStringLen + i] = i_PartToAppend[i];
@@ -95,21 +89,21 @@ appendToString(char* i_OrigString, const char* i_PartToAppend)
 
 PRIVATE
 void 
-appendIntToString(char* i_OrigString, Uint i_Num)
+appendIntToString(unsigned char* i_OrigString, Uint i_Num)
 {
-    const char* intString = (char*)malloc(10);
+    unsigned char* intString = (unsigned char*)malloc(10);
     //itoa(i_Num, intString, 10);
-    sprintf(intString, "%llu", i_Num);
+    sprintf((char*)intString, "%u", i_Num);
     appendToString(i_OrigString, intString);
     free(intString);
 }
 
 PUBLIC
-char* 
+unsigned char*
 concatBlock(bitcoin_block_data* i_Block)
 {
     Uint STRING_SIZE = 100;
-    char* concatedData = (char*)malloc(STRING_SIZE);
+    unsigned char* concatedData = (unsigned char*)malloc(STRING_SIZE);
     appendIntToString(concatedData, i_Block->height);
     appendIntToString(concatedData, i_Block->time_stamp);
     appendIntToString(concatedData, i_Block->prev_hash);
@@ -121,13 +115,28 @@ concatBlock(bitcoin_block_data* i_Block)
 }
 
 PUBLIC
+Uint
+createHashFromBlock(bitcoin_block_data* i_Block){
+    unsigned char* concatedBlock = concatBlock(i_Block);
+    Uint hashValue  = createHash(concatedBlock);
+    free(concatedBlock);
+    return hashValue;
+}
+
+PUBLIC
 EBoolType
 verify_block(bitcoin_block_data* i_Block)
 {
-    calculatedHash = createHash(concatBlock(&i_Block));
-EBoolType answer = i_Block->height != g_curr_srv_head ?
+    calculatedHash = createHashFromBlock(i_Block);
+EBoolType answer = i_Block->height != g_curr_srv_head->height + 1 ?
 		FALSE : g_curr_srv_head->hash != calculatedHash?
 		FALSE : TRUE;
 
 	return answer;
+}
+
+void logBit(char* msg){
+    logFile = fopen("b.log", "w+");
+    fprintf(logFile, "%s\n", msg);
+    fclose(logFile);
 }

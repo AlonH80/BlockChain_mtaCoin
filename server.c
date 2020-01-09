@@ -3,7 +3,6 @@
 #include <pthread.h>
 #include "../include/linked_list.h"
 #include "../include/bitcoin.h"
-//#include "bitcoin.c"
 #include "../include/utility.h"
 #include "../include/miner.h"
 #include "../include/dummy_miner.h"
@@ -22,7 +21,7 @@ initialize_list_with_genesis(Singly_Linked_List* blockchain);
 void
 destroy_srv(pthread_t threads_ids[]);
 
-int*
+pthread_t*
 initialize_srv();
 
 PUBLIC
@@ -32,26 +31,27 @@ server()
 	Singly_Linked_List blockchain;
 	initialize_list_with_genesis(&blockchain);
     pthread_t* threadsIds = initialize_srv();
-	bitcoin_block_data* checked_block = g_proposed_srv_head;
+	//bitcoin_block_data* checked_block = g_proposed_srv_head;
 	pthread_cond_broadcast(&wait_start_mine);
-
+    logBit("Start running server");
 	while(blockchain.length < 100){
 	    pthread_mutex_lock(&set_block_lock);
 	    pthread_cond_wait(&new_block_arrive, &set_block_lock);
-        currCandidate = g_proposed_srv_head;
+        currCandidate = g_proposed_srv_head;  // need to copy block
         pthread_mutex_unlock(&set_block_lock);
-
+        logBit("verify block");
 	    if (verify_block(currCandidate))
         {
+            logBit("adding block");
             append_To_List(&blockchain, currCandidate);
             print_block_acceptance();
         }
         else
         {
+            logBit("reject block");
             print_block_rejection();
             free(currCandidate);
         }
-
 	}
 
     destroy_List(&blockchain);
@@ -68,7 +68,7 @@ initialize_list_with_genesis(Singly_Linked_List* blockchain)
 
 	bitcoin_block_data* genesis_block = createGenesis();
 	
-	append_To_List(&blockchain, genesis_block);
+	append_To_List(blockchain, genesis_block);
 	g_curr_srv_head = genesis_block;
 	//free(genesis_block);
 }
@@ -95,12 +95,12 @@ print_block_rejection()
 }
 
 PRIVATE
-int*
+pthread_t*
 initialize_srv(){
     setpriority(PRIO_PROCESS, 0, -20);
     programInit();
     int i;
-    pthread_t thread_ids[NUM_OF_MINERS + 1];
+    pthread_t* thread_ids = (pthread_t*)malloc(sizeof(pthread_t) * (NUM_OF_MINERS + 1));
     for(i = 0; i < NUM_OF_MINERS; ++i){
             pthread_create(&thread_ids[i], NULL, programLoop, NULL);
     }
@@ -117,6 +117,7 @@ destroy_srv(pthread_t threads_ids[]){
         pthread_cancel(threads_ids[i]);
     }
     pthread_cancel(threads_ids[NUM_OF_MINERS]); // dummy thread
+    fclose(logFile);
     programDestroy();
 
 }

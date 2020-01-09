@@ -1,14 +1,9 @@
 
 #include "../include/miner.h"
-#include <stdlib.h>
-#include <stdio.h>
-#include <time.h>
-#include <pthread.h>
-#include "../include/utility.h"
 
 int thread_id = 0;
 
-void programLoop(){
+void* programLoop(){
     pthread_mutex_lock(&set_id);
     int miner_id = ++thread_id;
     pthread_mutex_unlock(&set_id);
@@ -16,7 +11,6 @@ void programLoop(){
 
     bitcoin_block_data* currBlock;
     bitcoin_block_data* newBlock;
-    BOOL blockIsRelevant = TRUE;
 
     while(1){
         currBlock = getCurrentBlockFromServer();
@@ -54,7 +48,7 @@ BOOL verifyBlockIsRelevant(bitcoin_block_data* i_Block){
 }
 
 void updateBlock(bitcoin_block_data* i_Block, int i_miner_id){
-    char* hashVal = NULL;
+    unsigned char* hashVal = NULL;
     i_Block->nonce = 1;
     i_Block->relayed_by = i_miner_id;
     hashVal = concatBlock(i_Block);
@@ -62,10 +56,10 @@ void updateBlock(bitcoin_block_data* i_Block, int i_miner_id){
     free(hashVal);
 }
 
-BOOL mineBlock(bitcoin_block_data* i_Block){
-    while(check_difficulty(i_Block, DIFFICULTY)){
+void mineBlock(bitcoin_block_data* i_Block){
+    while(!check_difficulty(i_Block->hash, DIFFICULTY)){
         i_Block->nonce = ++(i_Block->nonce);
         i_Block->time_stamp = get_current_time_stamp();
-        i_Block->hash = createHash(i_Block);
+        i_Block->hash = createHashFromBlock(i_Block);;
     }
 }

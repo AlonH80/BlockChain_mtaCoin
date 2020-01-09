@@ -25,7 +25,7 @@ void programDestroy()
 {
 	pthread_mutex_destroy(&get_block_lock);
 	pthread_mutex_destroy(&set_block_lock);
-	pthread_mutex_destroy(&wait_start_mine);
+	pthread_mutex_destroy(&set_id);
     pthread_cond_destroy(&wait_start_mine);
     pthread_cond_destroy(&new_block_arrive);
 }
@@ -43,23 +43,24 @@ PUBLIC
 void
 print_bitcoin_block_data(bitcoin_block_data* block_to_print)
 {
-	printf("height(%ld), ", block_to_print->height);
-	printf("timestamp(%ld), ", block_to_print->time_stamp);
-	printf("hash(%ld), ", block_to_print->hash);
-	printf("prev_hash(%ld), ", block_to_print->prev_hash);
-	printf("difficulty(%ld), ", block_to_print->difficulty);
-	printf("nonce(%ld)", block_to_print->nonce);
+	printf("height(%u), ", block_to_print->height);
+	printf("timestamp(%u), ", block_to_print->time_stamp);
+	printf("hash(%u), ", block_to_print->hash);
+	printf("prev_hash(%u), ", block_to_print->prev_hash);
+	printf("difficulty(%u), ", block_to_print->difficulty);
+	printf("nonce(%u)", block_to_print->nonce);
 }
 
 PUBLIC
 void 
 release_bitcoin_block_data(pVoid block_to_release)
 {
-	free(((bitcoin_block_data*)block_to_release)->hash);
-	free(((bitcoin_block_data*)block_to_release)->height);
-	free(((bitcoin_block_data*)block_to_release)->nonce);
-	free(((bitcoin_block_data*)block_to_release)->time_stamp);
-	free(((bitcoin_block_data*)block_to_release)->difficulty);
-	free(((bitcoin_block_data*)block_to_release)->relayed_by);
-	free(((bitcoin_block_data*)block_to_release)->prev_hash);
+//	free(((bitcoin_block_data*)block_to_release)->hash);
+//	free(((bitcoin_block_data*)block_to_release)->height);
+//	free(((bitcoin_block_data*)block_to_release)->nonce);
+//	free(((bitcoin_block_data*)block_to_release)->time_stamp);
+//	free(((bitcoin_block_data*)block_to_release)->difficulty);
+//	free(((bitcoin_block_data*)block_to_release)->relayed_by);
+//	free(((bitcoin_block_data*)block_to_release)->prev_hash);
+    free(block_to_release);
 }

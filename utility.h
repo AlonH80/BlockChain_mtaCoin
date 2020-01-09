@@ -9,6 +9,7 @@
 //---------------------------------------------------------------------------
 #include <stdlib.h>
 #include <string.h>
+#include <zlib.h>
 #include "bitcoin.h"
 #include "linked_list.h"
 #include "definitions.h"
@@ -22,17 +23,22 @@
 #define NUM_OF_MINERS 4
 
 Uint calculatedHash;
+FILE* logFile;
 
 //---------------------------------------------------------------------------
 //---------------------- Public Methods Prototypes---------------------------
 //---------------------------------------------------------------------------
+
+Uint get_current_time_stamp();
 bitcoin_block_data* initialize_new_block(bitcoin_block_data* i_head_block);
 bitcoin_block_data* createGenesis();
 Uint createHash(unsigned char* data);
 int check_difficulty(Uint i_Hash, int i_Difficulty);
-void appendToString(char* i_OrigString, const char* i_PartToAppend);
-void appendIntToString(char* i_OrigString, Uint i_Num);
-char* concatBlock(bitcoin_block_data* i_Block);
+void appendToString(unsigned char* i_OrigString, unsigned char* i_PartToAppend);
+void appendIntToString(unsigned char* i_OrigString, Uint i_Num);
+unsigned char* concatBlock(bitcoin_block_data* i_Block);
+Uint createHashFromBlock(bitcoin_block_data* i_Block);
 EBoolType verify_block(bitcoin_block_data* i_Block);
+void logBit(char* msg);
 
 #endif // !UTILITY_H
