@@ -61,7 +61,7 @@ PUBLIC
 Uint 
 createHash(char* data)
 {
-	return(crc32(0L, (unsigned char*)data, strlen((const char*)data)));
+    return(crc32(0L, (unsigned char*)data, strlen((const char*)data)));
 }
 
 PUBLIC
@@ -80,37 +80,43 @@ PRIVATE
 void 
 appendToString(char* i_OrigString, char* i_PartToAppend)
 {
-    int partLen = strlen((const char*)i_PartToAppend);
-    int origStringLen = strlen((const char*)i_OrigString);
+    int partLen = strlen(i_PartToAppend);
+    int origStringLen = strlen(i_OrigString);
     for (int i = 0; i < partLen; ++i)
 	{
         i_OrigString[origStringLen + i] = i_PartToAppend[i];
     }
+    i_OrigString[origStringLen + partLen] = '\0';
 }
 
 PRIVATE
 void 
 appendIntToString(char* i_OrigString, Uint i_Num)
 {
-    char* intString = malloc(10 * sizeof(char));
-    sprintf((char*)intString, "%u", i_Num);
+    //pthread_mutex_lock(&mallocLock);
+    char* intString = malloc(200 * sizeof(char));
+    //pthread_mutex_unlock(&mallocLock);
+    sprintf((char*)intString, "%x", i_Num);
     appendToString(i_OrigString, intString);
-    //free(intString);
+    //pthread_mutex_lock(&mallocLock);
+    free(intString);
+    //pthread_mutex_unlock(&mallocLock);
 }
 
 PUBLIC
 char*
 concatBlock(bitcoin_block_data* i_Block)
 {
-    Uint STRING_SIZE = 100;
+    Uint STRING_SIZE = 800;
+    //pthread_mutex_lock(&mallocLock);
     char* concatedData = malloc(STRING_SIZE * sizeof(char));
+    //pthread_mutex_unlock(&mallocLock);
+
     appendIntToString(concatedData, i_Block->height);
     appendIntToString(concatedData, i_Block->time_stamp);
     appendIntToString(concatedData, i_Block->prev_hash);
-    appendIntToString(concatedData, i_Block->difficulty);
     appendIntToString(concatedData, i_Block->nonce);
     appendIntToString(concatedData, i_Block->relayed_by);
-
     return concatedData;
 }
 
@@ -119,7 +125,9 @@ Uint
 createHashFromBlock(bitcoin_block_data* i_Block){
     char* concatedBlock = concatBlock(i_Block);
     Uint hashValue  = createHash(concatedBlock);
-    //free(concatedBlock);
+    //pthread_mutex_lock(&mallocLock);
+    free(concatedBlock);
+    //pthread_mutex_unlock(&mallocLock);
     return hashValue;
 }
 
@@ -136,10 +144,4 @@ EBoolType answer = i_Block->height != headBlockHeight + 1 ?
 		FALSE : TRUE;
 
 	return answer;
-}
-
-void logBit(char* msg){
-    logFile = fopen("b.log", "w+");
-    fprintf(logFile, "%s\n", msg);
-    fclose(logFile);
 }

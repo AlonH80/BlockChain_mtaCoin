@@ -43,6 +43,5 @@ void appendIntToString(char* i_OrigString, Uint i_Num);
 char* concatBlock(bitcoin_block_data* i_Block);
 Uint createHashFromBlock(bitcoin_block_data* i_Block);
 EBoolType verify_block(bitcoin_block_data* i_Block);
-void logBit(char* msg);
 
 #endif // !UTILITY_H

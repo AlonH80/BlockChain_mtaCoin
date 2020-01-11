@@ -35,7 +35,7 @@ server()
     pthread_t* threadsIds = initialize_srv();
 	//bitcoin_block_data* checked_block = g_proposed_srv_head;
 	//pthread_cond_broadcast(&wait_start_mine);
-	while(blockchain->length < 10){
+	while(blockchain->length < 100){
 	    pthread_mutex_lock(&set_block_lock);
 	    pthread_cond_wait(&new_block_arrive, &set_block_lock);
         currCandidate = g_proposed_srv_head;
@@ -57,7 +57,7 @@ server()
 	}
 
     destroy_List(blockchain);
-	//destroy_srv(threadsIds);
+	destroy_srv(threadsIds);
 }
 
 PRIVATE
@@ -76,7 +76,6 @@ print_block_acceptance()
 {
 	printf("Server: New block added by %d, attributes: ", 
 			currCandidate->relayed_by);
-	printf("currCalculatedHash = %d\n", calculatedHash);
 	print_bitcoin_block_data(currCandidate);
 	printf("\n");
 }
@@ -86,7 +85,7 @@ void
 print_block_rejection()
 {
     if (calculatedHash != currCandidate->hash){
-        printf("Wrong hash for block #%d by miner %d, received %d but calculated %d\n",
+        printf("Wrong hash for block #%d by miner %d, received %x but calculated %x\n",
                currCandidate->height,
                currCandidate->relayed_by,
                currCandidate->hash,
@@ -120,11 +119,6 @@ initialize_srv(){
 PRIVATE
 void
 destroy_srv(pthread_t threads_ids[]){
-//    int i;
-//    for (i = 0; i < NUM_OF_MINERS; ++i){
-//        pthread_cancel(threads_ids[i]);
-//    }
-//    pthread_cancel(threads_ids[NUM_OF_MINERS]); // dummy thread
     programDestroy();
 
 }
